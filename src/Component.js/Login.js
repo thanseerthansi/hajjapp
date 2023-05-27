@@ -32,9 +32,9 @@ export default function Login() {
         data: { "username": username, "password": password }
       }
       let data = await axios(body)
-      // console.log("data",data)
+      console.log("data",data)
       if (data.data.code===200) {
-        // console.log("dta",data.data.data)
+        // console.log("dta",data.data.data) 
         window.localStorage.setItem("hajjtoken",data.data.data)
         window.location = '/'
        
@@ -46,7 +46,12 @@ export default function Login() {
     } catch (error) {
       console.log(error)
       setload(false)
-      notifyerror(error.response.data.message)
+      try {
+        notifyerror(error.response.data.message)
+      } catch (e) {
+        notifyerror(error.message)
+      }
+      
       
     }
 

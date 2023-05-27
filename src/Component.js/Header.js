@@ -9,6 +9,7 @@ export default function Header() {
   useEffect(() => {
     Scripts()
   }, [])
+  // console.log("tokren",window.localStorage.getItem("hajjtoken"))
   const logoutfn=()=>{
     // console.log("logout")
     window.localStorage.setItem("hajjtoken",false)
@@ -19,10 +20,10 @@ export default function Header() {
     {/* partial:partials/_sidebar.html */}
 <nav className="sidebar">
 <div className="sidebar-header ">
- <a href= "/vessel" className="sidebar-brand">
+ <Link to= "/" className="sidebar-brand">
    {/* NNPA<span>UI</span> */}
    <img src="../assets/images/logo/logo1.png" alt="light theme" width={65} height={55} style={{marginLeft: "-9px"}} />
- </a>
+ </Link>
  <div className="sidebar-toggler not-active">
    <span />
    <span />
@@ -38,6 +39,7 @@ export default function Header() {
        <span className="link-title">Dashboard</span>
      </Link>
    </li>  */}
+   
    <li className="nav-item not-active colorlink ">
      <Link to="/" className="nav-link ">
        {/* <i className="link-icon" data-feather="grid" /> */}
@@ -46,7 +48,7 @@ export default function Header() {
      </Link>
    </li>
   
-  
+   {window.localStorage.getItem("hajjtoken")==="superAdmin"?<>
    <li className="nav-item not-active colorlink ">
      <Link to="/passengerlist" className="nav-link">
        {/* <i className="link-icon" data-feather="table" /> */}
@@ -61,6 +63,7 @@ export default function Header() {
        <span className="link-title " style={{paddingLeft:"4px"}}><b>Department</b></span>
      </Link>
    </li>
+   </>:null}
  </ul>
 </div>
 </nav>

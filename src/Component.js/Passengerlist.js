@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { TbDatabaseExport } from 'react-icons/tb';
 import DataTable from 'react-data-table-component';
 import DataTableExtensions from 'react-data-table-component-extensions';
@@ -9,12 +9,17 @@ import moment from 'moment';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Axioscall from './Axioscall';
+import { Simplecontext } from './Simplecontext';
 export default function Passengerlist() {
-  // const [hajjdata,sethajjdata]=useState([null])
+  const {Userhandler} = useContext(Simplecontext)
   const [ExcelFile,setExcelFile]=useState('');
   const[ExcelFileError,setExcelFileError]=useState('');
   const [excelData, setExcelData]=useState([]);
-
+  console.log("datapassende",excelData)
+  useEffect(() => {
+    Userhandler()
+  }, [])
+  
   const notify = (msg) => toast.success(msg, {
     position: "top-left",
     theme: "dark",
@@ -27,9 +32,9 @@ export default function Passengerlist() {
   const handlefile = (e)=>{
     let selectfile = e.target.files[0]
     if (selectfile){
-      console.log(selectfile.type)
+      // console.log(selectfile.type)
       if(selectfile&&filetype.includes(selectfile.type)){
-        console.log("excel")
+        // console.log("excel")
         let reader = new FileReader();
         reader.readAsArrayBuffer(selectfile);
         reader.onload=(e)=>{
@@ -41,7 +46,7 @@ export default function Passengerlist() {
       else{
         setExcelFileError('Please  select  excel file types');
         setExcelFile();
-        console.log("null")
+        // console.log("null")
       }
     
     } 
@@ -54,15 +59,14 @@ export default function Passengerlist() {
       const workbook = XLSX.read(ExcelFile,{type:'buffer'});
       const worksheetName = workbook.SheetNames[0];
       const worksheet=workbook.Sheets[worksheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
-      setExcelData(data);
+      const data = XLSX.utils.sheet_to_json(worksheet,{raw: false,dateNF: 'dd-mm-yyyy'});       
+      let passdata =nullhandler(data)
       console.log("data",data)
+      setExcelData(passdata);
     }
     else{setExcelFile()}
   }
-  // const rowNumber = (row) => excelData.indexOf(row) + 1;
         const columns =[
-    
             {
               name: <div>SR.NO
               </div>,
@@ -129,20 +133,19 @@ export default function Passengerlist() {
               selector : (itm)=><div>{itm.Mobile_No}</div>,
               width:"130px",
             },
-            // {
-            //   name:"Status",
-            //   selector : (itm)=><div className='p-2'>
-            //   <button  disabled className='h-auto w-auto rounded  p-1 btn btn-secondary ' >{itm.status}</button>
-            //   <br/><select onChange={(e)=>changestatus(itm.id,e.target.value)} className='form-select mt-1' >
-            //     <option value='' hidden>Change Status</option>
-            //     <option value="new">New</option>
-            //     <option value="dispatch">Dispatch</option>
-            //     <option value="delivered">Delivered</option>
-            //     <option value="delete">Delete</option>
-            //   </select>
-            //   </div>,
-        
-            // },
+            {
+              name:"Status",
+              selector : (itm)=><div className='p-2'>
+              <button  disabled className='h-auto w-auto rounded  p-1 btn btn-secondary ' >{itm.status}</button>
+              <br/><select onChange={(e)=>Statushandler(itm._id,e)} className='form-select mt-1' >
+                <option value='' hidden>Change Status</option>
+                <option value="new">New</option>
+                <option value="dispatch">Dispatch</option>
+                <option value="delivered">Delivered</option>
+                <option value="delete">Delete</option>
+              </select>
+              </div>,       
+            },
           ]
   const customStyles = {
     cells: {
@@ -173,11 +176,16 @@ export default function Passengerlist() {
       if (excelData){
         let data = await Axioscall("post","passenger",excelData)
         console.log("data",data)
-        if (data.data.status===200){
-          console.log("ok")
-        }else{
-          console.log("not")
+        try {
+          if (data.status===200){
+            notify("Added Successfully")
+          }else{
+            notifyerror("Something Went Wrong")
+          }
+        } catch (error) {
+          notifyerror(data.response.data.message)
         }
+        
       }else{
         notifyerror("Excel data not found upload excel again")
       }
@@ -185,6 +193,24 @@ export default function Passengerlist() {
       console.log("error",error)
       // notifyerror(error.response.data.message)
     }
+  }
+  const nullhandler=(data)=>{
+    // console.log("datnull",data)
+    if (data.length){
+      try {
+        data.forEach(element => {
+          if (!element.Address){
+            element.Address= ""
+          }
+        });
+        return data
+      } catch (error) { console.log(error) }
+    }else{
+      console.log("No data present")
+    }   
+  }
+  const Statushandler=()=>{
+
   }
   return (
     <div className='page-wrapper p-3 mt-5'>

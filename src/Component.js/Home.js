@@ -1,78 +1,98 @@
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import DataTable from 'react-data-table-component';
 import DataTableExtensions from 'react-data-table-component-extensions';
 import "react-data-table-component-extensions/dist/index.css";
 import moment from 'moment';
+import { Simplecontext } from './Simplecontext';
+import Axioscall from './Axioscall';
 
 export default function Home() {
+  const {Userhandler} = useContext(Simplecontext)
   const [hajjdata,sethajjdata]=useState([])
-  const rowNumber = (row) => hajjdata.indexOf(row) + 1;
+  useEffect(() => {
+    Userhandler()
+    Gethajjdata()
+  }, [])
+  const Gethajjdata =async()=>{
+    try {
+      let data = await Axioscall("get","passenger")
+      console.log("hajjdata",data)
+      if (data.status===200){
+        sethajjdata(data.data.data)
+      }else{
+        console.log("Something went wrong")
+      }
+    } catch (error) {
+      
+    }
+  }
+       const rowNumber = (row) => hajjdata.indexOf(row) + 1;
         const columns =[
     
             {
               name: <div>SR.NO
               </div>,
-              selector: (itm) =>itm['SR.NO'],
+              selector: (row) =>rowNumber(row),
               width:"70px",
             },
             {
               name:"DATE",
-              selector : (itm)=><div className='d-flex-col text-center'>{moment(itm.created_date).format("MM-DD-YYYY")}</div>,
+              selector : (itm)=><div className='d-flex-col text-center'>{moment(itm['Date']).format("MM-DD-YYYY")}</div>,
               // selector : (itm)=><div>F{orderdata.created_date.split('T')[1].split('.')[1]}f{orderdata.id}</div>,
               width:"110px"
             },
             {
               name:"FLIGHT SNO",
-              selector : (itm)=><div>{itm['Fligth Sno']}</div>,
+              selector : (itm)=><div>{itm.Flight_Sno}</div>,
               width:"105px"
             },
             {
               name:"FLIGHT NO",
-              selector : (itm)=><div>{itm['Flight No']}</div>,
+              selector : (itm)=><div>{itm.Flight_No}</div>,
             },
             {
               name:"EMPARCATION",
-              selector : (itm)=><div>{itm['Emparcation']}</div>,
+              selector : (itm)=><div>{itm.Emparcation}</div>,
               width:"120px",
             },
             {
               name:"COVER NO",
-              selector : (itm)=><div>{itm['Cover No']}</div>,
+              selector : (itm)=><div>{itm.Cover_No}</div>,
             },
             {
               name:"PP NO",
-              selector : (itm)=><div>{itm['PP NO']}</div>,
+              selector : (itm)=><div>{itm.PP_No}</div>,
             },
             {
               name:"NAME",
-              selector : (itm)=><div style={{ whiteSpace: "normal" }}>{itm['Name']}</div>,
+              selector : (itm)=><div style={{ whiteSpace: "normal" }}>{itm.Name}</div>,
               width:"150px",
               
             },
             {
               name:"ADDRESS",
-              selector : (itm)=><div style={{ whiteSpace: "normal" }}>{itm['Address']} </div>,
+              selector : (itm)=><div style={{ whiteSpace: "normal" }}>{itm.Address} </div>,
               width:"150px",
               // style: { overflowWrap: "break-word" }
             },
             {
               name:"DISTRICT",
-              selector : (itm)=><div>{itm['District']}</div>,
+              selector : (itm)=><div>{itm.District}</div>,
               width:"130px",
             },
             {
               name:"AGE",
-              selector : (itm)=><div>{itm['Age']}</div>,
+              selector : (itm)=><div>{itm.Age}</div>,
               // width:"150px",
             },
             {
               name:"GENDER",
-              selector : (itm)=><div>{itm['Gender']}</div>,
+              selector : (itm)=><div>{itm.Gender}</div>,
               // width:"150px",
             },
             {
               name:"MOBILE",
-              selector : (itm)=><div>{itm['Mobile No']}</div>,
+              selector : (itm)=><div>{itm.Mobile_No}</div>,
               width:"130px",
             },
             // {

@@ -6,12 +6,13 @@ import Home from './Component.js/Home';
 import Login from './Component.js/Login';
 import Passengerlist from './Component.js/Passengerlist';
 import Department from './Component.js/Department';
+import Simplecontextprovider from './Component.js/Simplecontext';
 
 function App() {
   return (
     <>
      <BrowserRouter>
-      {/* <Simplecontextprovider> */}
+      <Simplecontextprovider>
       <Routes>
         <Route exact path="/login" element={<Login/>}/>
         <Route path="/" element={< Outlethome />}>
@@ -22,7 +23,7 @@ function App() {
           
         </Route>
       </Routes>
-      {/* </Simplecontextprovider> */}
+      </Simplecontextprovider>
       </BrowserRouter>
     </>
   );
