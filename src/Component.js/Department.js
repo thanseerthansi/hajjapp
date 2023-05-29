@@ -6,16 +6,18 @@ import { RiDeleteBin6Line } from 'react-icons/ri';
 import DataTable from 'react-data-table-component';
 import { Simplecontext } from './Simplecontext';
 import Axioscall from './Axioscall';
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 export default function Department() {
   const {Userhandler} = useContext(Simplecontext)
   const [departmentdata, setdepartmentdata]= useState([])
   const [modal, setmodal] = useState(false)
-  // const [username, setusername] = useState('')
-  // const [password, setpassword] = useState('')
   const [department, setdepartment] = useState({departmentname:"",username:"",password:""})
   const [searchvalue, setsearchvalue] = useState('')
-  console.log("department",department)
+  const [selectedvalue,setselectedvalue]=useState('')
+  const [load,setload]=useState(true)
+  // console.log("department",department)
   useEffect(() => {
     Userhandler()
     Getdeppartment()
@@ -23,22 +25,24 @@ export default function Department() {
   const Getdeppartment=async()=>{
     try {
       let data =await Axioscall("get","department")
-      console.log("data",data)
+      // console.log("data",data)
       try {
         if (data.status===200){
           setdepartmentdata(data.data.data)
+          setload(false)
         }else{
-          console.log("Something Went Wrong")
+          notifyerror(data.message)
+          setload(false)
         }
       } catch (error) {
         console.log(error)
-      }
-      
+        setload(false)
+      }     
     } catch (error) {
       console.log(error)
+      setload(false)
     }
-  }
- 
+  } 
   const notify = (msg) => toast.success(msg, {
     position: "top-left",
     theme: "dark",
@@ -47,11 +51,23 @@ export default function Department() {
     position: "top-left",
     theme: "dark",
   });
-
+  const submitdelete = (itemid) => { 
+    confirmAlert({
+        title: "Confirmation",
+        message: `Are you sure to delete this ?`,
+        buttons: [
+        {
+            label: "Yes",           
+            onClick:()=>deletetask(itemid),
+        },
+        {
+            label: "No"
+        } 
+        ],       
+    });
+    };
   const rowNumber = (row) => departmentdata.filter(t=>t.departmentname.toUpperCase().includes(searchvalue.toUpperCase())).indexOf(row) + 1;
-  // const rowNumber = (row) => departmentdata.indexOf(row) + 1;
   const columns = [
-
     {
       name: <div>#</div>,
       selector: (row) => rowNumber(row),
@@ -74,47 +90,107 @@ export default function Department() {
     {
       name: "Action",
       selector: (itm) => <div className='d-flex'><div>
-        <button onClick={()=>setmodal(!modal)} className='btn btn-warning btn-xs '><BiEdit size={15} /></button>
+        <button onClick={()=>setmodal(!modal) & edithandler(itm)} className='btn btn-warning btn-xs '><BiEdit size={15} /></button>
       </div>
         <div className='ml-5' style={{ marginLeft: "2px" }}>
-          <button className='btn btn-danger btn-xs' ><RiDeleteBin6Line size={15} /></button>
+          <button onClick={()=>submitdelete(itm._id)} className='btn btn-danger btn-xs' ><RiDeleteBin6Line size={15} /></button>
         </div></div>,
     },
   ]
-
   const customStyles = {
     cells: {
       style: {
-        border: "0.5px solid #f5f2f2 ",
-
+        border: "0.5px solid #f5f2f2 "
       },
     },
-
     headCells: {
       style: {
         minHeight: '40px',
         border: "0.5px solid #e8e2e2 ",
         borderTopWidth: '1.5px'
       },
-
     },
     filter: {
       style: {
         border: "1px solid gray",
       }
     }
-
   };
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setdepartment(prevState => ({ ...prevState, [name]: value }));
   };
   const Postdepartrment=async(e)=>{
-    e.preventDefault();
+    e.preventDefault()
+    setload(true)
     try {
-      let data =await Axioscall("put","department")
+      // console.log("depart,ent",department)
+      let datalist  = {...department}
+      let msg
+      let method 
+      if (selectedvalue){
+        datalist._id = selectedvalue._id
+        msg="Updated Successfully"
+        method ="put"
+      }else{
+        msg = "Saved Successfully"
+        method = "post"
+      }
+      let data =await Axioscall(method,"department",datalist)
+      try {
+        if (data.status===200){
+          notify(msg)
+          Getdeppartment()
+          setmodal(!modal)
+          setload(false)
+        }else{
+          notifyerror(msg)
+          setload(false)
+        }
+      } catch (error) {
+        setload(false)
+        notifyerror(data.response.data.message)
+      }      
     } catch (error) {
-      
+      setload(false)
+      console.log(error)
+    }
+  }
+  const edithandler=(data)=>{
+    setdepartment({
+      departmentname: data.departmentname,
+      username: data.username,
+      password: data.password
+    });
+    setselectedvalue(data)
+  }
+  const setallnull=()=>{
+    setdepartment({
+      departmentname: "",
+      username: "",
+      password: ""
+    });
+    setselectedvalue('')
+  }
+  const deletetask=async(itemid)=>{
+    setload(true)
+    try {
+      let data =await Axioscall("delete","department",{_id:itemid})
+      try {
+        if (data.status===200){
+          notify("Deleted Successfully")
+          setload(false)
+          Getdeppartment()
+        }else{
+          notifyerror("something went wrong")
+          setload(false)
+        }
+      } catch (error) {
+        setload(false)
+        notifyerror(data.response.data.message)
+      }
+    } catch (error) {
+      console.log(error)
     }
   }
   return (
@@ -170,9 +246,9 @@ export default function Department() {
         <div className="modal-dialog modal-dialog-centered modal-lg box-shadow-blank" >
           <div className="modal-content"><div className="modal-header">
             <h5 className="modal-title" id="exampleModalCenterTitle">Department</h5>
-            <button onClick={() => setmodal(!modal)} type="button" className="btn-close" data-bs-dismiss="modal" aria-label="btn-close" />
+            <button onClick={() => setmodal(!modal)&setallnull()} type="button" className="btn-close" data-bs-dismiss="modal" aria-label="btn-close" />
           </div>
-            <form className="forms-sample"  >
+            <form className="forms-sample" onSubmit={(e)=>Postdepartrment(e)} >
               <div className="modal-body">
                 <div className='row text-start'>
                   <div className="mb-3 col-12">
@@ -191,13 +267,16 @@ export default function Department() {
                 <div />
               </div>
               <div className="modal-footer">
-                <button onClick={() => setmodal(!modal)} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="submit" className="btn btn-primary">Submit</button>
+                <button onClick={() => setmodal(!modal)&setallnull()} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" className="btn btn-primary">Save</button>
               </div>
             </form>
           </div>
         </div>
       </div>
+      {load? <div className="spinner-container">
+                        <div className="spinner " />
+                      </div>:null}
     </div>
   )
 }
