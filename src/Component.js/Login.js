@@ -40,8 +40,7 @@ export default function Login() {
        
       } else {
         setload(false)
-        notifyerror("invalid Username or password")
-        
+        notifyerror("invalid Username or password")        
       }
     } catch (error) {
       console.log(error)
@@ -50,11 +49,8 @@ export default function Login() {
         notifyerror(error.response.data.message)
       } catch (e) {
         notifyerror(error.message)
-      }
-      
-      
+      }    
     }
-
   }
   return (
     <div className='main-wrapper App'>

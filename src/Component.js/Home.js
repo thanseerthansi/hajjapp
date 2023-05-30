@@ -13,11 +13,13 @@ import 'react-toastify/dist/ReactToastify.css'
 export default function Home() {
   const { Userhandler } = useContext(Simplecontext)
   const [hajjdata, sethajjdata] = useState([])
+  const [selectdata, setselectdata] = useState('')
   const [status, setstatus] = useState({ departmentname: "", status: "", remark: "" })
   const [load, setload] = useState(true)
   const [modal, setmodal] = useState(false)
   const [modal2, setmodal2] = useState(false)
-  console.log("status", status)
+  // console.log("status", status)
+  // console.log("selsecteddata", selectdata)
   useEffect(() => {
     Userhandler()
     Gethajjdata()
@@ -120,10 +122,10 @@ export default function Home() {
     {
       name: "Status",
       selector: (itm) => <div className='d-flex'><div>
-        <button onClick={()=>setmodal(!modal)} className='btn btn-primary btn-xs '><FaEye size={15} /></button>
+        <button onClick={()=>setmodal(!modal) & setselectdata(itm)} className='btn btn-primary btn-xs '><FaEye size={15} /></button>
       </div>
         <div className='ml-5' style={{ marginLeft: "2px" }}>
-          <button onClick={()=>setmodal2(!modal2)} className='btn btn-warning btn-xs' ><BiEdit size={15} /></button>
+          <button onClick={()=>setmodal2(!modal2) & setselectdata(itm)} className='btn btn-warning btn-xs' ><BiEdit size={15} /></button>
         </div></div>,
       width:"130px"
     },
@@ -149,24 +151,37 @@ export default function Home() {
   };
   const changestatus = async (e) => {
     e.preventDefault();
+    setload(true)
     try {
-      let data = await Axioscall("post")
+      let datalist = {...status}
+      let department = window.localStorage.getItem("hajjtoken")
+      datalist.departmentname=department
+      datalist.passenger_id = selectdata._id
+      let data = await Axioscall("put","status",datalist)
       try {
         if (data.status === 200) {
-
+          notify("Successfully added")
+          Gethajjdata()
+          setmodal2(!modal2)
+          setload(false)
+          setallnull()
         } else {
-
+          notifyerror("Something went wrong")
+          setload(false)
         }
       } catch (error) {
-        notifyerror()
+        notifyerror(data.response.data.message)
+        setload(false)
       }
 
     } catch (error) {
-
+      notifyerror("Something went wrong")
+      setload(false)
     }
   }
   const setallnull = () => {
     setstatus({ departmentname: "", status: "", remark: "" });
+    setselectdata('')
   }
   return (
     <div className='page-wrapper p-3 mt-5'>
@@ -188,8 +203,8 @@ export default function Home() {
                     pagination
                     defaultSortField="_id"
                     defaultSortAsc={false}
-                    fixedHeader
-                    className="tablereact  "
+                    // fixedHeader
+                    className="tablereact"
                     customStyles={customStyles}
                   />
                 </DataTableExtensions>
@@ -203,10 +218,29 @@ export default function Home() {
         <div className="modal-dialog modal-dialog-centered modal-lg box-shadow-blank" >
           <div className="modal-content"><div className="modal-header">
             <h5 className="modal-title" id="exampleModalCenterTitle">Status</h5>
-            <button onClick={() => setmodal(!modal)} type="button" className="btn-close" data-bs-dismiss="modal" aria-label="btn-close" />
+            <button onClick={() => setmodal(!modal)& setallnull()} type="button" className="btn-close" data-bs-dismiss="modal" aria-label="btn-close" />
           </div>
           <div className='modal-body'>
-            <h1>BOdy</h1>
+          <div className="table-responsive pt-3">
+          <table className="table table-bordered">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Remark</th>
+              </tr>
+            </thead>
+            <tbody>
+            {selectdata? selectdata.Status.length ?selectdata.Status.map((itm,k)=>(
+                <tr key={k}>
+                <td>{itm.departmentname}</td>
+                <td>{itm.status}</td>
+                <td>{itm.remark}</td>
+              </tr>          
+              )) :<tr><td colSpan={3} className='text-center'>No Status Found</td></tr>:<tr colSpan={3} className='text-center'><td>No Found</td></tr>}             
+            </tbody>
+          </table>
+        </div>
             </div>
           </div>
         </div>
@@ -215,7 +249,7 @@ export default function Home() {
         <div className="modal-dialog modal-dialog-centered modal-sm box-shadow-blank" >
           <div className="modal-content"><div className="modal-header">
             <h5 className="modal-title" id="exampleModalCenterTitle">Status</h5>
-            <button onClick={() => setmodal2(!modal2)} type="button" className="btn-close" data-bs-dismiss="modal" aria-label="btn-close" />
+            <button onClick={() => setmodal2(!modal2)& setallnull()} type="button" className="btn-close" data-bs-dismiss="modal" aria-label="btn-close" />
           </div>
             <div>
               <form className="forms-sample" onSubmit={(e)=>changestatus(e)}  >
@@ -225,22 +259,22 @@ export default function Home() {
                       <label htmlFor="Status" className="form-label ">Status </label>
                       <select required name="status" onChange={handleInputChange} value={status.status} className="form-select" >
                         <option hidden value='' >Select status</option>
-                        <option value='print' >print</option>
-
+                        <option value='confirm' >Confirm</option>
+                        <option value='cancel' >Cancel</option>
+                        <option value='reject' >Reject</option>
                       </select>
-
                     </div>
+                    {status.status==="confirm" ?null:
                     <div className="mb-3 col-12">
-                      <label htmlFor="remark" className="form-label ">Reason </label>
-                      <input name="remark" onChange={handleInputChange} value={status.remark} type="text" required className="form-control" placeholder="reason" />
+                      <label htmlFor="remark" className="form-label ">Reason</label>
+                      <input name="remark" onChange={handleInputChange} value={status.remark} type="text"required  className="form-control" placeholder="reason" />
                     </div>
-
-
+                    }
                   </div>
                   <div />
                 </div>
                 <div className="modal-footer">
-                  <button onClick={() => setmodal2(!modal2)} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button onClick={() => setmodal2(!modal2) & setallnull()} type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                   <button type="submit" className="btn btn-primary">Save</button>
                 </div>
               </form>

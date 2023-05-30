@@ -75,7 +75,10 @@ export default function Header() {
    <i data-feather="menu" />
  </a>
  <div className="navbar-content">
-  
+ <ul className="navbar-nav" style={{marginLeft:"0px"}}>
+    <li className="nav-item ">
+    <h6 className="card-title text-start text-bold">{window.localStorage.getItem('hajjtoken')}</h6></li>
+  </ul>
    <ul className="navbar-nav">
     
      <li className="nav-item colorlink">

@@ -62,7 +62,7 @@ export default function Passengerlist() {
       const worksheet = workbook.Sheets[worksheetName];
       const data = XLSX.utils.sheet_to_json(worksheet, { raw: false, dateNF: 'dd-mm-yyyy' });
       let passdata = nullhandler(data)
-      console.log("data", data)
+      // console.log("data", data)
       setExcelData(passdata);
     }
     else { setExcelFile() }
@@ -134,19 +134,19 @@ export default function Passengerlist() {
       selector: (itm) => <div>{itm.Mobile_No}</div>,
       width: "130px",
     },
-    {
-      name: "Status",
-      selector: (itm) => <div className='p-2'>
-        <button disabled className='h-auto w-auto rounded  p-1 btn btn-secondary ' >{itm.status}</button>
-        <br /><select onChange={(e) => Statushandler(itm._id, e)} className='form-select mt-1' >
-          <option value='' hidden>Change Status</option>
-          <option value="new">New</option>
-          <option value="dispatch">Dispatch</option>
-          <option value="delivered">Delivered</option>
-          <option value="delete">Delete</option>
-        </select>
-      </div>,
-    },
+    // {
+    //   name: "Status",
+    //   selector: (itm) => <div className='p-2'>
+    //     <button disabled className='h-auto w-auto rounded  p-1 btn btn-secondary ' >{itm.status}</button>
+    //     <br /><select onChange={(e) => Statushandler(itm._id, e)} className='form-select mt-1' >
+    //       <option value='' hidden>Change Status</option>
+    //       <option value="new">New</option>
+    //       <option value="dispatch">Dispatch</option>
+    //       <option value="delivered">Delivered</option>
+    //       <option value="delete">Delete</option>
+    //     </select>
+    //   </div>,
+    // },
   ]
   const customStyles = {
     cells: {
@@ -177,11 +177,12 @@ export default function Passengerlist() {
     try {
       if (excelData) {
         let data = await Axioscall("post", "passenger", excelData)
-        console.log("data", data)
+        // console.log("data", data)
         try {
           if (data.status === 200) {
             notify("Added Successfully")
             setload(false)
+            setallnull()
           } else {
             notifyerror("Something Went Wrong")
             setload(false)
@@ -216,8 +217,10 @@ export default function Passengerlist() {
       console.log("No data present")
     }
   }
-  const Statushandler = () => {
-
+  const setallnull = () => {
+    // console.log("nulll")
+    setExcelData([])
+    setExcelFile('')
   }
   return (
     <div className='page-wrapper p-3 mt-5'>
