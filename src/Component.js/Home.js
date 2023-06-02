@@ -20,6 +20,7 @@ export default function Home() {
   const [modal, setmodal] = useState(false)
   const [modal2, setmodal2] = useState(false)
   const [flightdata,setflightdata]=useState([])
+  const [flightnumber,setflightnumber]=useState('')
   // console.log("status", status)
   // console.log("flighgt", flightdata)
   useEffect(() => {
@@ -43,9 +44,11 @@ export default function Home() {
       let data = await Axioscall("get", "passenger")
       // console.log("hajjdata",data)
       if (data.status === 200) {
-        setpassengerdata(data.data.data)
+        // setpassengerdata(data.data.data)
+        sethajjdata(data.data.data)
         setload(false)
         flighthandler(data.data.data)
+        // flighthandler(data.data.data)
       } else {
         notifyerror(data.message)
         setload(false)
@@ -194,6 +197,7 @@ export default function Home() {
         if (data.status === 200) {
           notify("Successfully added")
           Gethajjdata()
+          handlerpassenger(flightnumber)
           setmodal2(!modal2)
           setload(false)
           setallnull()
@@ -234,12 +238,17 @@ export default function Home() {
   const hajjhandler=(value)=>{
     try {
      
-      let data =passengerdata.filter(t=>t.Flight_No===value)
+      let data = hajjdata.filter(t=>t.Flight_No===value)
       // console.log("valuedata",data)
       sethajjdata(data)
     } catch (error) {
       
     }
+  }
+  const handlerpassenger=(value)=>{
+    console.log("data",value)
+    setflightnumber(value)
+    hajjhandler(value)
   }
   return (
     <div className='page-wrapper p-3 mt-5'>
@@ -255,7 +264,7 @@ export default function Home() {
                 <div className='row'>
                   <label ><b>Select Flight</b></label>
                   <div className='col-6'>
-                  <select required name="status" onChange={(e)=>hajjhandler(e.target.value)} className="form-select" >
+                  <select required name="status" onChange={(e)=>handlerpassenger(e.target.value)} className="form-select" >
                         <option hidden value='' >Select Flight</option>
                         {flightdata.map((itm,k)=>(
                           <option key={k} value={itm} >{itm}</option>
@@ -273,7 +282,7 @@ export default function Home() {
               <div className="">
                 <DataTableExtensions
                   columns={columns}
-                  data={hajjdata}
+                  data={flightnumber? hajjdata:""}
                   print={false}
                   export={false}
                 >
