@@ -12,14 +12,16 @@ import 'react-toastify/dist/ReactToastify.css'
 
 export default function Home() {
   const { Userhandler } = useContext(Simplecontext)
+  const [passengerdata, setpassengerdata] = useState([])
   const [hajjdata, sethajjdata] = useState([])
   const [selectdata, setselectdata] = useState('')
   const [status, setstatus] = useState({ departmentname: "", status: "", remark: "" })
   const [load, setload] = useState(true)
   const [modal, setmodal] = useState(false)
   const [modal2, setmodal2] = useState(false)
+  const [flightdata,setflightdata]=useState([])
   // console.log("status", status)
-  // console.log("selsecteddata", selectdata)
+  // console.log("flighgt", flightdata)
   useEffect(() => {
     Userhandler()
     Gethajjdata()
@@ -41,8 +43,9 @@ export default function Home() {
       let data = await Axioscall("get", "passenger")
       // console.log("hajjdata",data)
       if (data.status === 200) {
-        sethajjdata(data.data.data)
+        setpassengerdata(data.data.data)
         setload(false)
+        flighthandler(data.data.data)
       } else {
         notifyerror(data.message)
         setload(false)
@@ -60,6 +63,22 @@ export default function Home() {
       selector: (row) => rowNumber(row),
       width: "70px",
     },
+    {
+      name: "COVER NO",
+      selector: (itm) => <div>{itm.Cover_No}</div>,
+    },
+    {
+      name: "Status",
+      selector: (itm) => <div className='d-flex'><div>
+        <button onClick={()=>setmodal(!modal) & setselectdata(itm)} className='btn btn-primary btn-xs '><FaEye size={15} /></button>
+      </div>
+      {window.localStorage.getItem('hajjtoken')==="superAdmin"?null:
+        <div className='ml-5' style={{ marginLeft: "2px" }}>
+          <button onClick={()=>setmodal2(!modal2) & setselectdata(itm)} className='btn btn-warning btn-xs' ><BiEdit size={15} /></button>
+        </div>
+       }</div>,
+      width:"130px"
+    }, 
     {
       name: "DATE",
       selector: (itm) => <div className='d-flex-col text-center'>{moment(itm['Date']).format("MM-DD-YYYY")}</div>,
@@ -80,10 +99,7 @@ export default function Home() {
       selector: (itm) => <div>{itm.Emparcation}</div>,
       width: "120px",
     },
-    {
-      name: "COVER NO",
-      selector: (itm) => <div>{itm.Cover_No}</div>,
-    },
+   
     {
       name: "PP NO",
       selector: (itm) => <div>{itm.PP_No}</div>,
@@ -119,16 +135,7 @@ export default function Home() {
       selector: (itm) => <div>{itm.Mobile_No}</div>,
       width: "130px",
     },
-    {
-      name: "Status",
-      selector: (itm) => <div className='d-flex'><div>
-        <button onClick={()=>setmodal(!modal) & setselectdata(itm)} className='btn btn-primary btn-xs '><FaEye size={15} /></button>
-      </div>
-        <div className='ml-5' style={{ marginLeft: "2px" }}>
-          <button onClick={()=>setmodal2(!modal2) & setselectdata(itm)} className='btn btn-warning btn-xs' ><BiEdit size={15} /></button>
-        </div></div>,
-      width:"130px"
-    },
+   
   ]
   const customStyles = {
     cells: {
@@ -149,6 +156,31 @@ export default function Home() {
       }
     }
   };
+  const conditionalRowStyles = [
+    window.localStorage.getItem("hajjtoken")==="superAdmin"?
+    {
+      when: (row) => row.Status.some((status) => status.status === 'cancel'),
+      // when: (row) => row.Status.some((status))==="cancel",
+      style: (row) => ({
+        backgroundColor: '#e50606',
+        color: 'white',
+      }),
+    }:{
+      when: (row) => row.Status.filter(t=>t.departmentname===window.localStorage.getItem('hajjtoken')).some((status) => status.status === 'cancel'),
+      // when: (row) => row.Status.some((status))==="cancel",
+      style: (row) => ({
+        backgroundColor: '#e50606',
+        color: 'white',
+      }),
+    },{
+      when: (row) => row.Status.filter(t=>t.departmentname===window.localStorage.getItem('hajjtoken')).some((status) => status.status === 'confirm'),
+      // when: (row) => row.Status.some((status))==="cancel",
+      style: (row) => ({
+        backgroundColor: '#0fb10f',
+        color: 'white',
+      }),
+    }
+  ];
   const changestatus = async (e) => {
     e.preventDefault();
     setload(true)
@@ -182,6 +214,32 @@ export default function Home() {
   const setallnull = () => {
     setstatus({ departmentname: "", status: "", remark: "" });
     setselectdata('')
+    setpassengerdata('')
+  }
+  const flighthandler=(pdata)=>{
+    try {
+      let data =[...pdata]
+      let list =[]
+      data.forEach(element => {
+        if(!list.includes(element.Flight_No)){
+          list.push(element.Flight_No)
+        }
+      });
+      // console.log("dataof flight",list)
+      setflightdata(list)
+    } catch (error) {
+      
+    }
+  }
+  const hajjhandler=(value)=>{
+    try {
+     
+      let data =passengerdata.filter(t=>t.Flight_No===value)
+      // console.log("valuedata",data)
+      sethajjdata(data)
+    } catch (error) {
+      
+    }
   }
   return (
     <div className='page-wrapper p-3 mt-5'>
@@ -192,6 +250,26 @@ export default function Home() {
           <div className="card">
             <div className="card-body">
               <h6 className="card-title text-start text-bold">Passengers</h6>
+              <div>
+              <div className=' '>
+                <div className='row'>
+                  <label ><b>Select Flight</b></label>
+                  <div className='col-6'>
+                  <select required name="status" onChange={(e)=>hajjhandler(e.target.value)} className="form-select" >
+                        <option hidden value='' >Select Flight</option>
+                        {flightdata.map((itm,k)=>(
+                          <option key={k} value={itm} >{itm}</option>
+                        ))}
+                        
+                      </select>
+                    {/* <input type='file' onChange={handlefile} placeholder='Upload Your File Here' className='form-control ' /> */}
+                  </div>
+                  
+                </div>
+                
+              </div>
+             
+              </div>
               <div className="">
                 <DataTableExtensions
                   columns={columns}
@@ -206,6 +284,7 @@ export default function Home() {
                     // fixedHeader
                     className="tablereact"
                     customStyles={customStyles}
+                    conditionalRowStyles={conditionalRowStyles}
                   />
                 </DataTableExtensions>
 
@@ -228,11 +307,11 @@ export default function Home() {
                 <th>Department</th>
                 <th>Status</th>
                 <th>Remark</th>
-              </tr>
+              </tr> 
             </thead>
             <tbody>
-            {selectdata? selectdata.Status.length ?selectdata.Status.map((itm,k)=>(
-                <tr key={k}>
+            {selectdata? selectdata.Status.length ?selectdata.Status.filter(window.localStorage.getItem('hajjtoken')==="superAdmin"?t=>t: t=>t.departmentname===window.localStorage.getItem('hajjtoken')).map((itm,k)=>(
+                <tr key={k} style={itm.status==="confirm"?{backgroundColor:"#0fb10f",color:"white"}:{backgroundColor:"#e50606",color:"white"}}>
                 <td>{itm.departmentname}</td>
                 <td>{itm.status}</td>
                 <td>{itm.remark}</td>
